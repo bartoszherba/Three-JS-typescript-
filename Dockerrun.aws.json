@@ -1,0 +1,12 @@
+{
+    "AWSEBDockerrunVersion": "1",
+    "Image": {
+      "Name": "bartoszherba/three-js-sample"
+    },
+    "Ports": [
+      {
+        "ContainerPort": 8080,
+        "HostPort": 8000
+      }
+    ]
+  }

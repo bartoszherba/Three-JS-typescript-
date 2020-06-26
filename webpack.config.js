@@ -1,10 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/three.js',
+  entry: './src/main.js',
   output: {
     filename: 'pub/js/main.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist')
   },
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
