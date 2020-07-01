@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WebGLRenderer, Scene, Mesh, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, DirectionalLight, Shape, Color } from 'three';
+import { WebGLRenderer, Scene, Mesh, SphereGeometry, MeshPhongMaterial, PointLight, Object3D, DirectionalLight, Shape, Color, Box3, Vector3 } from 'three';
 import Randomizer from './Tetromino/randomizer';
 import TetrominoFactory from './Tetromino/TetrominoFactory';
 import TetrominoInterface from './Tetromino/TetrominoInterface';
@@ -15,10 +15,10 @@ function getRenderer(id: string): WebGLRenderer {
 
 function main() {
     const renderer = getRenderer('c');
-    document.body.appendChild(renderer.domElement);
+    document.body.prepend(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(20, 2, 0.1, 100);
-    camera.position.set(0, 0, 20);
+    const camera = new THREE.PerspectiveCamera(40, 2, 0.1, 100);
+    camera.position.set(3, -3, 31);
     const scene = new THREE.Scene();
     const light1: DirectionalLight = new DirectionalLight('#fff', 0.7);
     const light2: DirectionalLight = new DirectionalLight('#fff', 0.5);
@@ -40,8 +40,6 @@ function main() {
 
     const factory: TetrominoFactory = new TetrominoFactory();
     let tetromino: TetrominoInterface = factory.create(shape, new Color('#FF0000'));
-
-
 
     tetromino.attachTo(scene);
 
@@ -68,9 +66,15 @@ function main() {
                 break;
 
         }
-        console.log(tetromino.getSelf().position);
-
+        console.log(tetromino.getSelf().position, 'group position');
     });
+
+    var gridHelper = new THREE.GridHelper( 7, 7 );
+    gridHelper.position.set(3,-3,20.5);
+    gridHelper.rotateX(THREE.MathUtils.degToRad(90));
+    var helper = new THREE.CameraHelper( camera );
+    scene.add( helper );
+    scene.add( gridHelper );
 
     function resizeRendererToDisplaySize(renderer) {
         const canvas = renderer.domElement;
