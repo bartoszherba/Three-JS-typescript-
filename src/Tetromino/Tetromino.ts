@@ -92,7 +92,7 @@ export default class Tetromino implements TetrominoInterface {
     }
 
     petrify() {
-        const tetrominoSpace = this.board.getRoot().getObjectByName('space');
+        const tetrominoSpace = this.getBoard().getSpace();
         tetrominoSpace.remove(this.root);
         this.root.traverse((element) => {
             if (element.name.indexOf('element') > -1) {
@@ -104,6 +104,7 @@ export default class Tetromino implements TetrominoInterface {
                 petrifiedBlock.name = 'petrified';
                 petrifiedBlock.position.set(Math.round(elWorldPosition.x), Math.round(elWorldPosition.y), Math.round(elWorldPosition.z));
                 tetrominoSpace.add(petrifiedBlock);
+                this.getBoard().addPetrifiedBlock(Math.round(elWorldPosition.z), petrifiedBlock);
             };
         });
 

@@ -1,5 +1,5 @@
 import BoardInterface from "./BoardInterface";
-import { Vector3, Color, Mesh, Group } from "three";
+import { Vector3, Color, Mesh, Group, Object3D, MeshPhongMaterial } from "three";
 import RendererInterface from "./RendererInterface";
 import DefaultRenderer from "./DefaultRenderer";
 import TetrominoInterface from "../Tetromino/TetrominoInterface";
@@ -11,7 +11,7 @@ export default class DefaultBoard implements BoardInterface {
     color: Color;
     score: number;
     tetromino: TetrominoInterface;
-    petrified: any;
+    petrified: { [deepth: number]: Mesh[] } = {};
     root: Group;
     tetrominoSpace: Group;
     layersColors: Color[] = [];
@@ -24,8 +24,9 @@ export default class DefaultBoard implements BoardInterface {
         this.tetrominoSpace = new Group();
         this.tetrominoSpace.name = 'space';
         this.root.add(this.tetrominoSpace);
-        for (let i = 1; i <= length; i++) {
+        for (let i = 0; i < length; i++) {
             this.layersColors.push(new Color('#' + Math.floor(Math.random() * 16777215).toString(16)));
+            this.petrified[i] = [];
         }
         renderer = renderer || new DefaultRenderer();
         renderer.drawGrid(this);
@@ -43,11 +44,15 @@ export default class DefaultBoard implements BoardInterface {
         return this.tetromino;
     }
 
-    addPetrifiedBlock(block: Mesh): void {
-        throw new Error("Method not implemented.");
+    addPetrifiedBlock(deepth: number, block: Mesh): void {
+        if (!this.petrified[deepth]) {
+            this.petrified[deepth] = [];
+        }
+
+        this.petrified[deepth].push(block);
     }
 
-    getPetrifiedList(): Mesh[] {
+    getPetrifiedList(): { [deepth: number]: Mesh[] } {
         return this.petrified;
     }
 
@@ -69,5 +74,13 @@ export default class DefaultBoard implements BoardInterface {
 
     getLayersColors(): Color[] {
         return this.layersColors;
+    }
+
+    getSpace(): Object3D {
+        return this.getRoot().getObjectByName('space');
+    }
+
+    repaint(block: Mesh): void {
+        block.material = new MeshPhongMaterial({ color: new Color(this.layersColors[block.position.z]) });
     }
 }

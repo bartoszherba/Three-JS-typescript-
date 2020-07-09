@@ -5,7 +5,7 @@ export default interface BoardInterface {
     readonly size: number;
     readonly length: number;
     readonly color: Color;
-    readonly petrified: Object3D[];
+    petrified: { [deepth: number]: Mesh[] };
     readonly layersColors: Color[];
     readonly tetromino: TetrominoInterface;
     readonly root: Group;
@@ -17,8 +17,10 @@ export default interface BoardInterface {
     getColor(): Color;
     setActiveTetromino(tetromino: TetrominoInterface): void;
     getActiveTetromino(): TetrominoInterface;
-    getPetrifiedList(): Mesh[];
-    addPetrifiedBlock(block: Mesh): void;
+    getPetrifiedList(): { [deepth: number]: Mesh[] };
+    addPetrifiedBlock(deepth: number, block: Mesh): void;
     getRoot(): Group;
     getLayersColors(): Color[];
+    getSpace(): Object3D;
+    repaint(block: Mesh): void;
 }

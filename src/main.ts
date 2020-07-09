@@ -5,7 +5,6 @@ import TetrominoFactory from './Tetromino/TetrominoFactory';
 import TetrominoInterface from './Tetromino/TetrominoInterface';
 import StandardShapes from './Tetromino/StandardShapes';
 import ShapeInterface from './Tetromino/ShapeInterface';
-import BoardInterface from './Board/BoardInterface';
 import DefaultBoard from './Board/DefaultBoard';
 
 function getRenderer(id: string): WebGLRenderer {
@@ -70,9 +69,9 @@ function main() {
         }
     });
 
-    score();
+    addNewTetromino();
 
-    function score() {
+    function addNewTetromino() {
         let tetromino = createNewTetromino();
         tetromino.attachToBoard(board);
         board.setActiveTetromino(tetromino);
@@ -96,8 +95,37 @@ function main() {
 
         return needResize;
     }
+
     board.getRoot().addEventListener('petrification', function (event) {
-        score();
+        const petrified = board.getPetrifiedList();
+
+        for (let i = 0; i < board.getLength(); i++) {
+            const totalPetrified = petrified[i].length;
+
+            if (totalPetrified >= 10) {
+                petrified[i].forEach((block: Mesh) => {
+                    board.getSpace().remove(block);
+                });
+                petrified[i] = [];
+                board.petrified = petrified;
+            }
+        }
+
+        for (let i = 0; i < board.getLength(); i++) {
+            if (petrified[i].length === 0) {
+                if (petrified[i + 1]) {
+                    petrified[i] = petrified[i + 1];
+                    petrified[i + 1] = [];
+                }
+            }
+            petrified[i].forEach((block: Mesh) => {
+                block.position.z = i;
+                board.repaint(block);
+            });
+        }
+
+        addNewTetromino();
+
         renderer.render(scene, camera);
     });
 
