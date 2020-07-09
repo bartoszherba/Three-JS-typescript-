@@ -16,8 +16,9 @@ export default class TetrominoFactory {
             obj.position.copy(vector.add(shape.origin));
             obj.name ='element' + i++;
             group.add(obj);
-            group.position.set(3,-3, 19);
         });
+
+        // group.position.set(2,-2, 15);
 
         return new Tetromino(group);
     }

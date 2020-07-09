@@ -1,5 +1,6 @@
 import { Scene, Group } from "three";
 import BoardInterface from "../Board/BoardInterface";
+import { Rotation } from "./Enum/RotationEnum";
 
 export default interface TetrominoInterface {
     moveLeft(): void,
@@ -7,12 +8,9 @@ export default interface TetrominoInterface {
     moveUp(): void,
     moveDown(): void,
     moveDeeper(): void,
-    rotateLeft(): void,
-    rotateRight(): void,
-    rotateUp(): void,
-    rotateDown(): void,
     attachToBoard(board: BoardInterface): void;
     getRoot(): Group;
     getBoard(): BoardInterface;
     petrify(): void;
+    rotateOnAxis(axis: Rotation);
 }

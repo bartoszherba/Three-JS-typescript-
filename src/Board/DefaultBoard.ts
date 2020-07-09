@@ -25,7 +25,7 @@ export default class DefaultBoard implements BoardInterface {
         this.tetrominoSpace.name = 'space';
         this.root.add(this.tetrominoSpace);
         for (let i = 0; i < length; i++) {
-            this.layersColors.push(new Color('#' + Math.floor(Math.random() * 16777215).toString(16)));
+            this.layersColors.push(new Color('#' + ("000000" + Math.random().toString(16).slice(2, 8).toUpperCase()).slice(-6)));
             this.petrified[i] = [];
         }
         renderer = renderer || new DefaultRenderer();

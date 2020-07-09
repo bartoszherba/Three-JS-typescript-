@@ -1,14 +1,8 @@
 import TetrominoInterface from "./TetrominoInterface";
-import { Group, AxesHelper, MathUtils, Vector3, BoxBufferGeometry, MeshPhongMaterial, Mesh } from "three";
+import { Group, AxesHelper, MathUtils, Vector3, BoxBufferGeometry, MeshPhongMaterial, Mesh, EdgesGeometry, LineSegments, LineBasicMaterial } from "three";
 import BoardInterface from "../Board/BoardInterface";
-
-enum Direction {
-    LEFT,
-    UP,
-    RIGHT,
-    DOWN,
-    PUSH,
-}
+import { Direction } from "./Enum/DirectionEnum";
+import { Rotation } from "./Enum/RotationEnum";
 
 export default class Tetromino implements TetrominoInterface {
     readonly root: Group;
@@ -63,24 +57,8 @@ export default class Tetromino implements TetrominoInterface {
         }
     }
 
-    rotateLeft(): void {
-        this.rotate(Direction.LEFT);
-        this.board.getRoot().dispatchEvent( { type: 'move' } );
-    }
-
-    rotateRight(): void {
-        this.rotate(Direction.RIGHT);
-        this.board.getRoot().dispatchEvent( { type: 'move' } );
-    }
-
-    rotateUp(): void {
-        this.rotate(Direction.UP);
-        this.board.getRoot().dispatchEvent( { type: 'move' } );
-    }
-
-    rotateDown(): void {
-        this.rotate(Direction.DOWN);
-        this.board.getRoot().dispatchEvent( { type: 'move' } );
+    rotateOnAxis(axis: Rotation) {
+        this.rotate(axis);
     }
 
     getRoot() {
@@ -111,19 +89,16 @@ export default class Tetromino implements TetrominoInterface {
         this.board.getRoot().dispatchEvent( { type: 'petrification' } );
     }
 
-    private rotate(direction: Direction) {
-        switch (direction) {
-            case Direction.LEFT:
-                this.root.rotation.z += (MathUtils.degToRad(90));
-                break;
-            case Direction.RIGHT:
-                this.root.rotation.z -= (MathUtils.degToRad(90));
-                break;
-            case Direction.UP:
-                this.root.rotation.x -= (MathUtils.degToRad(90));
-                break;
-            case Direction.DOWN:
+    private rotate(axis: Rotation) {
+        switch (axis) {
+            case Rotation.X:
                 this.root.rotation.x += (MathUtils.degToRad(90));
+                break;
+            case Rotation.Y:
+                this.root.rotation.y += (MathUtils.degToRad(90));
+                break;
+            case Rotation.Z:
+                this.root.rotation.z += (MathUtils.degToRad(90));
                 break;
         }
         this.root.updateMatrixWorld(true);
@@ -133,25 +108,17 @@ export default class Tetromino implements TetrominoInterface {
             if (element.name.indexOf('element') > -1) {
                 const elWorldPosition = new Vector3();
                 element.getWorldPosition(elWorldPosition);
-                switch (direction) {
-                    case Direction.LEFT:
-                    case Direction.RIGHT:
-                        if (Math.round(elWorldPosition.x) < 0) {
-                            this.root.position.x += 1;
-                        }
-                        if (Math.round(elWorldPosition.x) > 6) {
-                            this.root.position.x -= 1;
-                        }
-                        break;
-                    case Direction.UP:
-                    case Direction.DOWN:
-                        if (Math.round(elWorldPosition.y) > 0) {
-                            this.root.position.y -= 1;
-                        }
-                        if (Math.round(elWorldPosition.y) < -6) {
-                            this.root.position.y += 1;
-                        }
-                        break;
+                if (Math.round(elWorldPosition.x) < 0) {
+                    this.root.position.x += 1;
+                }
+                if (Math.round(elWorldPosition.x) > this.getBoard().getSize() - 1) {
+                    this.root.position.x -= 1;
+                }
+                if (Math.round(elWorldPosition.y) > 0) {
+                    this.root.position.y -= 1;
+                }
+                if (Math.round(elWorldPosition.y) < -this.getBoard().getSize() - 1) {
+                    this.root.position.y += 1;
                 }
                 this.root.updateMatrixWorld(true);
             }
@@ -195,13 +162,11 @@ export default class Tetromino implements TetrominoInterface {
                                 if (Math.round(petrified.position.z) === Math.round(elWorldPosition.z -1)
                                     && Math.round(petrified.position.x) === Math.round(elWorldPosition.x)
                                     && Math.round(petrified.position.y) === Math.round(elWorldPosition.y)) {
-                                        console.log('CANT');
                                         canMove = false;
                                 }
                             }
                            
                         });
-                       
 
                         break;
                 }

@@ -6,6 +6,7 @@ import TetrominoInterface from './Tetromino/TetrominoInterface';
 import StandardShapes from './Tetromino/StandardShapes';
 import ShapeInterface from './Tetromino/ShapeInterface';
 import DefaultBoard from './Board/DefaultBoard';
+import { Rotation } from './Tetromino/Enum/RotationEnum';
 
 function getRenderer(id: string): WebGLRenderer {
     const renderer = new THREE.WebGLRenderer();
@@ -19,7 +20,6 @@ function main() {
     document.body.prepend(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(40, 2, 0.1, 100);
-    camera.position.set(3, -3, 30);
     const scene = new THREE.Scene();
     const light1: DirectionalLight = new DirectionalLight('#fff', 0.7);
     const light2: DirectionalLight = new DirectionalLight('#fff', 0.5);
@@ -35,16 +35,18 @@ function main() {
     scene.add(light2);
     scene.add(light3);
 
-    const board: DefaultBoard = new DefaultBoard();
+    const board: DefaultBoard = new DefaultBoard(5, 15);
     scene.add(board.getRoot());
+
+    camera.position.set(Math.floor(board.getSize() / 2), -Math.floor(board.getSize() / 2), board.getLength() + 8);
 
     const shapeRandomizer: Randomizer = new Randomizer(new StandardShapes());
     const factory: TetrominoFactory = new TetrominoFactory();
 
+
     createNewTetromino();
 
     document.body.addEventListener('keydown', (e) => {
-        console.log(e.keyCode);
         switch (e.keyCode) {
             case 37: board.getActiveTetromino().moveLeft();
                 break;
@@ -56,15 +58,11 @@ function main() {
                 break;
             case 32: board.getActiveTetromino().moveDeeper();
                 break;
-            case 65: board.getActiveTetromino().rotateLeft();
+            case 65: board.getActiveTetromino().rotateOnAxis(Rotation.Z);
                 break;
-            case 87: board.getActiveTetromino().rotateUp();
+            case 68: board.getActiveTetromino().rotateOnAxis(Rotation.Y);
                 break;
-            case 68: board.getActiveTetromino().rotateRight();
-                break;
-            case 83: board.getActiveTetromino().rotateDown();
-                break;
-            case 81: createNewTetromino();
+            case 83: board.getActiveTetromino().rotateOnAxis(Rotation.X);
                 break;
         }
     });
@@ -73,6 +71,8 @@ function main() {
 
     function addNewTetromino() {
         let tetromino = createNewTetromino();
+        console.log(Math.floor(board.getSize()) / 2);
+        tetromino.getRoot().position.set(Math.floor(board.getSize() / 2), -Math.floor(board.getSize() / 2), board.getLength() - 1);
         tetromino.attachToBoard(board);
         board.setActiveTetromino(tetromino);
     }
@@ -81,7 +81,6 @@ function main() {
         let shape: ShapeInterface = shapeRandomizer.rollShape();
 
         return factory.create(shape, new Color('#FF0000'));
-
     }
 
     function resizeRendererToDisplaySize(renderer) {
@@ -102,7 +101,7 @@ function main() {
         for (let i = 0; i < board.getLength(); i++) {
             const totalPetrified = petrified[i].length;
 
-            if (totalPetrified >= 10) {
+            if (totalPetrified >= Math.pow(board.getSize(), 2)) {
                 petrified[i].forEach((block: Mesh) => {
                     board.getSpace().remove(block);
                 });
