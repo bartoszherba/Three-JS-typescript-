@@ -1,4 +1,5 @@
-import { Scene } from "three";
+import { Scene, Group } from "three";
+import BoardInterface from "../Board/BoardInterface";
 
 export default interface TetrominoInterface {
     moveLeft(): void,
@@ -10,6 +11,8 @@ export default interface TetrominoInterface {
     rotateRight(): void,
     rotateUp(): void,
     rotateDown(): void,
-    attachTo(scene: Scene): void,
-    getSelf()
+    attachToBoard(board: BoardInterface): void;
+    getRoot(): Group;
+    getBoard(): BoardInterface;
+    petrify(): void;
 }

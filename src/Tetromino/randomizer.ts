@@ -1,4 +1,3 @@
-import { Vector3 } from "three";
 import ShapesRepositoryInerface from "./ShapesRepositoryInterface";
 import ShapeInterface from "./ShapeInterface";
 

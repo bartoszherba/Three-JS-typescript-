@@ -14,9 +14,9 @@ export default class TetrominoFactory {
         shape.shape.forEach((vector) => {
             const obj = new Mesh(boxGeo, boxMat);
             obj.position.copy(vector.add(shape.origin));
-            obj.name ='element-' + i++;
+            obj.name ='element' + i++;
             group.add(obj);
-            group.position.set(3,-3, 20);
+            group.position.set(3,-3, 19);
         });
 
         return new Tetromino(group);

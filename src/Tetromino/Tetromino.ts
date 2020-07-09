@@ -1,157 +1,213 @@
 import TetrominoInterface from "./TetrominoInterface";
-import { Group, Box3, Scene, AxesHelper, MathUtils, Vector3 } from "three";
+import { Group, AxesHelper, MathUtils, Vector3, BoxBufferGeometry, MeshPhongMaterial, Mesh } from "three";
+import BoardInterface from "../Board/BoardInterface";
 
 enum Direction {
     LEFT,
     UP,
     RIGHT,
     DOWN,
+    PUSH,
 }
 
 export default class Tetromino implements TetrominoInterface {
-    readonly self: Group;
-    readonly box: Box3;
+    readonly root: Group;
+    board: BoardInterface;
 
-    constructor(self: Group) {
-        this.self = self;
-        this.box = new Box3();
-        this.box.setFromObject(this.self);
+    constructor(root: Group) {
+        this.root = root;
         const axes: AxesHelper = new AxesHelper(8);
         axes.renderOrder = 1;
-        this.self.add(axes);
+        this.root.add(axes);
     }
 
-    attachTo(scene: Scene) {
-        scene.add(this.self);
+    attachToBoard(board: BoardInterface) {
+        board.getRoot().getObjectByName('space').add(this.root);
+        this.board = board;
     }
 
     moveLeft(): void {
         if (this.canMove(Direction.LEFT)) {
-            this.self.position.x -= 1;
+            this.root.position.x -= 1;
+            this.board.getRoot().dispatchEvent( { type: 'move' } );
         }
     }
 
     moveRight(): void {
         if (this.canMove(Direction.RIGHT)) {
-            this.self.position.x += 1;
+            this.root.position.x += 1;
+            this.board.getRoot().dispatchEvent( { type: 'move' } );
         }
     }
 
     moveUp(): void {
         if (this.canMove(Direction.UP)) {
-            this.self.position.y += 1;
+            this.root.position.y += 1;
+            this.board.getRoot().dispatchEvent( { type: 'move' } );
         }
     }
 
     moveDown(): void {
         if (this.canMove(Direction.DOWN)) {
-            this.self.position.y -= 1;
+            this.root.position.y -= 1;
+            this.board.getRoot().dispatchEvent( { type: 'move' } );
         }
     }
 
     moveDeeper(): void {
-        this.self.position.z -= 1;
+        if (this.canMove(Direction.PUSH)) {
+            this.root.position.z -= 1;
+            this.board.getRoot().dispatchEvent( { type: 'move' } );
+        } else {
+            this.petrify();
+        }
     }
 
     rotateLeft(): void {
         this.rotate(Direction.LEFT);
+        this.board.getRoot().dispatchEvent( { type: 'move' } );
     }
 
     rotateRight(): void {
         this.rotate(Direction.RIGHT);
+        this.board.getRoot().dispatchEvent( { type: 'move' } );
     }
 
     rotateUp(): void {
         this.rotate(Direction.UP);
+        this.board.getRoot().dispatchEvent( { type: 'move' } );
     }
 
     rotateDown(): void {
         this.rotate(Direction.DOWN);
+        this.board.getRoot().dispatchEvent( { type: 'move' } );
     }
 
-    getSelf() {
-        return this.self;
+    getRoot() {
+        return this.root;
+    }
+
+    getBoard(): BoardInterface {
+        return this.board;
+    }
+
+    petrify() {
+        const tetrominoSpace = this.board.getRoot().getObjectByName('space');
+        tetrominoSpace.remove(this.root);
+        this.root.traverse((element) => {
+            if (element.name.indexOf('element') > -1) {
+                const elWorldPosition = new Vector3();
+                element.getWorldPosition(elWorldPosition);
+                const boxGeo: BoxBufferGeometry = new BoxBufferGeometry(1, 1, 1, 2, 2, 2);
+                const boxMat: MeshPhongMaterial = new MeshPhongMaterial({ color: this.getBoard().getLayersColors()[elWorldPosition.z] });
+                const petrifiedBlock = new Mesh(boxGeo, boxMat);
+                petrifiedBlock.name = 'petrified';
+                petrifiedBlock.position.set(Math.round(elWorldPosition.x), Math.round(elWorldPosition.y), Math.round(elWorldPosition.z));
+                tetrominoSpace.add(petrifiedBlock);
+            };
+        });
+
+        this.board.getRoot().dispatchEvent( { type: 'petrification' } );
     }
 
     private rotate(direction: Direction) {
         switch (direction) {
             case Direction.LEFT:
-                this.self.rotation.y += (MathUtils.degToRad(90));
+                this.root.rotation.z += (MathUtils.degToRad(90));
                 break;
             case Direction.RIGHT:
-                this.self.rotation.y -= (MathUtils.degToRad(90));
+                this.root.rotation.z -= (MathUtils.degToRad(90));
                 break;
             case Direction.UP:
-                this.self.rotation.x -= (MathUtils.degToRad(90));
+                this.root.rotation.x -= (MathUtils.degToRad(90));
                 break;
             case Direction.DOWN:
-                this.self.rotation.x += (MathUtils.degToRad(90));
+                this.root.rotation.x += (MathUtils.degToRad(90));
                 break;
         }
-        this.self.updateMatrixWorld(true);
+        this.root.updateMatrixWorld(true);
 
-        this.self.traverse((element) => {
+        // Reposition tetromino after rotation to keep in in a stage boundary
+        this.root.traverse((element) => {
             if (element.name.indexOf('element') > -1) {
-                const worldPosition = new Vector3();
-                element.getWorldPosition(worldPosition);
+                const elWorldPosition = new Vector3();
+                element.getWorldPosition(elWorldPosition);
                 switch (direction) {
                     case Direction.LEFT:
                     case Direction.RIGHT:
-                        if (Math.round(worldPosition.x) < 0) {
-                            this.self.position.x += 1;
+                        if (Math.round(elWorldPosition.x) < 0) {
+                            this.root.position.x += 1;
                         }
-                        if (Math.round(worldPosition.x) > 6) {
-                            this.self.position.x -= 1;
+                        if (Math.round(elWorldPosition.x) > 6) {
+                            this.root.position.x -= 1;
                         }
                         break;
                     case Direction.UP:
                     case Direction.DOWN:
-                        if (Math.round(worldPosition.y) > 0) {
-                            this.self.position.y -= 1;
+                        if (Math.round(elWorldPosition.y) > 0) {
+                            this.root.position.y -= 1;
                         }
-                        if (Math.round(worldPosition.y) < -6) {
-                            this.self.position.y += 1;
+                        if (Math.round(elWorldPosition.y) < -6) {
+                            this.root.position.y += 1;
                         }
                         break;
                 }
-                this.self.updateMatrixWorld(true);
+                this.root.updateMatrixWorld(true);
             }
         });
+        this.board.getRoot().dispatchEvent( { type: 'move' } );
     }
 
-    private canMove(directtion: Direction) {
+    private canMove(directtion: Direction, board?: BoardInterface) {
         let canMove = true;
-        this.self.traverse((element) => {
+        this.root.traverse((element) => {
             if (element.name.indexOf('element') > -1) {
-                const worldPosition = new Vector3();
-                element.getWorldPosition(worldPosition);
-
+                const elWorldPosition = new Vector3();
+                element.getWorldPosition(elWorldPosition);
                 switch (directtion) {
                     case Direction.LEFT:
-                        if (Math.round(worldPosition.x) - 1 < 0) {
+                        if (Math.round(elWorldPosition.x) - 1 < 0) {
                             canMove = false;
                         }
                         break;
                     case Direction.RIGHT:
-                        if (Math.round(worldPosition.x) + 1 > 6) {
+                        if (Math.round(elWorldPosition.x) + 1 > this.getBoard().getSize() - 1) {
                             canMove = false;
                         }
                         break;
                     case Direction.UP:
-                        if (Math.round(worldPosition.y) + 1 > 0) {
+                        if (Math.round(elWorldPosition.y) + 1 > 0) {
                             canMove = false;
                         }
                         break;
                     case Direction.DOWN:
-                        if (Math.round(worldPosition.y) - 1 < -6) {
+                        if (Math.round(elWorldPosition.y) - 1 < -this.getBoard().getSize() + 1) {
                             canMove = false;
                         }
+                        break;
+                    case Direction.PUSH:
+                        if (Math.round(elWorldPosition.z) - 1 < 0) {
+                            canMove = false;
+                        }
+                        this.board.getRoot().getObjectByName('space').traverse((petrified) => {
+                            if (petrified.name.indexOf('petrified') > -1) {
+                                if (Math.round(petrified.position.z) === Math.round(elWorldPosition.z -1)
+                                    && Math.round(petrified.position.x) === Math.round(elWorldPosition.x)
+                                    && Math.round(petrified.position.y) === Math.round(elWorldPosition.y)) {
+                                        console.log('CANT');
+                                        canMove = false;
+                                }
+                            }
+                           
+                        });
+                       
+
                         break;
                 }
 
             }
         });
-
+        
         return canMove;
     }
 }
